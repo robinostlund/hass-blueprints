@@ -118,7 +118,7 @@ variables:
   payload_object_detected: "{{ objects|select('in', object)|list|length > 0 }}"
   payload_label: "{{ payload_object | title }}"
   payload_entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
-  payload_entered_zones_changed: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
+  #payload_entered_zones_changed: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
 
 condition:
   and:
@@ -128,20 +128,21 @@ condition:
 
     # verify the object is an object we should monitor
     - conditon: template
-      value_template: "{{ not frigate_labels|length or object in payload_object }}"
+      value_template: "{{ not frigate_labels|length or payload_object in frigate_labels }}"
 
     # verify the zone is a zone we should monitor
     - condition: template
-      value_template: "{{ payload_entered_zones_changed }}"
+      #value_template: "{{ payload_entered_zones_changed }}"
+      value_template: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
 
 action:
 
   - alias: Send notification
     service: !input notify_group
     data_template:
-      title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+      title: 💦 {{ payload_label }} detected on {{ frigate_camera_name }} camera.
       message: |
-        DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
+        DEBUG: id {{ payload_id }}, object {{ payload_object }}, label {{ payload_label }}, entered_zones {{ payload_entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
         {{ trigger.payload_json['after'] }}
       data:
         group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
