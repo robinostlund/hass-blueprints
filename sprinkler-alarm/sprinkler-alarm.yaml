@@ -138,24 +138,26 @@ action:
             data:
               photo:
                 - url: "{{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg"
+                  caption: >-
+                    {{ label }} detected on {{ frigate_camera_name }} camera.
 
-        - alias: Send notification
-          service: !input notify_group
-          data_template:
-            title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
-            message: |
-              DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
-              {{ trigger.payload_json['after'] }}
-            data:
-              group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
-              image: >-
-                {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
-              tag: '{{ id }}'
-              push:
-                sound:
-                  name: "default"
-                  critical: 1
-                  volume: 0.0
+        # - alias: Send notification
+        #   service: !input notify_group
+        #   data_template:
+        #     title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+        #     message: |
+        #       DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
+        #       {{ trigger.payload_json['after'] }}
+        #     data:
+        #       group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
+        #       image: >-
+        #         {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
+        #       tag: '{{ id }}'
+        #       push:
+        #         sound:
+        #           name: "default"
+        #           critical: 1
+        #           volume: 0.0
 
         - alias: Verify this zone is enabled
           condition: and
