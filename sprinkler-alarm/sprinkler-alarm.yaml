@@ -121,7 +121,7 @@ variables:
   # content
   payload_camera: "{{ trigger.payload_json['after']['camera'] }}"
   payload_id: "{{ trigger.payload_json['after']['id'] }}"
-  payload_start_time: "{{ trigger.payload_json["after"]["start_time"] }}"
+  payload_start_time: "{{ trigger.payload_json['after']['start_time'] }}"
   payload_object: "{{ trigger.payload_json['after']['label'] }}"
   #payload_object_detected: "{{ frigate_labels|select('in', object)|list|length > 0 }}"
   payload_label: "{{ payload_object | title }}"
