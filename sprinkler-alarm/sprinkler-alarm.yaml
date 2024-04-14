@@ -60,7 +60,7 @@ blueprint:
     #       filter:
     #         - domain: alarm_control_panel
 
-    notify_group: 
+    notify_mobile_device_group: 
       name: "Notify Group"
       description: "Specify notify service to trigger on an event"
       default: ""
@@ -85,9 +85,14 @@ trigger_variables:
 trigger:
   - platform: mqtt
     topic: frigate/events
-    #payload: '{{ frigate_camera }}/new'
-    payload: '{{ frigate_camera }}/all'
-    value_template: '{{ value_json[''after''][''camera''] }}/{{ value_json[''type'']}}'
+    payload: "{{ frigate_camera }}/new"
+    value_template: "{{ value_json['after']['camera'] }}/{{ value_json['type']}}"
+    id: frigate-event
+
+  - platform: mqtt
+    topic: frigate/events
+    payload: "{{ frigate_camera }}/update"
+    value_template: "{{ value_json['after']['camera'] }}/{{ value_json['type']}}"
     id: frigate-event
 
 variables:
@@ -142,7 +147,7 @@ condition:
 
 action:
   - alias: Send notification
-    service: !input notify_group
+    service: !input notify_mobile_device_group
     data_template:
       title: 💦 {{ payload_label }} detected on {{ frigate_camera_name }} camera.
       message: |
