@@ -134,7 +134,6 @@ condition:
       - "{{ not frigate_zones|length or frigate_zones|select('in', entered_zones)|list|length > 0 }}"
 
 action:
-
   - alias: Send notification
     service: !input notify_group
     data_template:
