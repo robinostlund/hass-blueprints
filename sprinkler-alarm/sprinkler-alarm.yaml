@@ -132,7 +132,7 @@ condition:
 
       # verify the zone is a zone we should monitor
       #- "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
-      - "{{ not frigate_zones|length or frigate_zones|select('in', entered_zones)|list|length > 0 }}"
+      - "{{ not frigate_zones|length or frigate_zones|select('in', payload_entered_zones)|list|length > 0 }}"
 
 action:
   - alias: Send notification
@@ -145,8 +145,8 @@ action:
       data:
         group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
         image: >-
-          {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
-        tag: '{{ id }}'
+          {{ hass_base_url }}/api/frigate/notifications/{{ payload_id }}/thumbnail.jpg
+        tag: '{{ payload_id }}'
         push:
           sound:
             name: "default"
