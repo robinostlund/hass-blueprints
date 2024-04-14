@@ -89,6 +89,9 @@ trigger:
     id: frigate-event
 
 variables:
+  # base
+  hass_base_url: !input hass_base_url
+
   # frigate camera
   input_frigate_camera: !input frigate_camera
   frigate_camera: '{{ input_frigate_camera | replace(''camera.'', '''') }}'
@@ -106,6 +109,7 @@ variables:
 
   # telegram
   #telegram_chat_id: !input notify_telegram_chat_id
+
 
 
 action:
