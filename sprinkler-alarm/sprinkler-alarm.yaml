@@ -121,19 +121,20 @@ variables:
   #payload_entered_zones_changed: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
 
 condition:
-  and:
-    # verify we have an object
-    - condition: template
-      value_template: "{{ payload_object_detected }}"
+  - condition: and
+    conditions:
+      # verify we have an object
+      - condition: template
+        value_template: "{{ payload_object_detected }}"
 
-    # verify the object is an object we should monitor
-    - conditon: template
-      value_template: "{{ not frigate_labels|length or payload_object in frigate_labels }}"
+      # verify the object is an object we should monitor
+      - conditon: template
+        value_template: "{{ not frigate_labels|length or payload_object in frigate_labels }}"
 
-    # verify the zone is a zone we should monitor
-    - condition: template
-      #value_template: "{{ payload_entered_zones_changed }}"
-      value_template: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
+      # verify the zone is a zone we should monitor
+      - condition: template
+        #value_template: "{{ payload_entered_zones_changed }}"
+        value_template: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
 
 action:
 
