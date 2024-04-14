@@ -59,13 +59,13 @@ blueprint:
     #       filter:
     #         - domain: alarm_control_panel
 
-    notify_service: 
-      name: "Notify Service"
+    notify_group: 
+      name: "Notify Group"
       description: "Specify notify service to trigger on an event"
-      selector:
-        device:
-          integration: mobile_app
-          multiple: false
+      # selector:
+      #   device:
+      #     integration: mobile_app
+      #     multiple: false
 
 
 mode: single
