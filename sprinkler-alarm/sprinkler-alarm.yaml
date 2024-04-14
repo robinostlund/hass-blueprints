@@ -92,10 +92,13 @@ variables:
   # frigate zones
   input_frigate_zones: !input frigate_zones
   frigate_zones: '{{ input_frigate_zones | list }}'
+  #frigate_zones: '{{ input_frigate_zones }}'
 
   # frigate labels
   input_frigate_labels: !input frigate_labels
-  frigate_labels: '{{ input_frigate_labels | list }}'
+  #frigate_labels: '{{ input_frigate_labels | list }}'
+  frigate_labels: '{{ input_frigate_labels }}'
+
 
 action:
   - choose:
