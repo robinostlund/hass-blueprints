@@ -62,6 +62,7 @@ blueprint:
     notify_group: 
       name: "Notify Group"
       description: "Specify notify service to trigger on an event"
+      default: ""
       # selector:
       #   device:
       #     integration: mobile_app
