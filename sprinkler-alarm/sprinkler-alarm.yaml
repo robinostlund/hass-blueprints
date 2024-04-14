@@ -63,6 +63,7 @@ blueprint:
       name: "Notify Group"
       description: "Specify notify service to trigger on an event"
       default: ""
+
       # selector:
       #   device:
       #     integration: mobile_app
@@ -70,19 +71,10 @@ blueprint:
 
 
 mode: single
-variables:
+trigger_variables:
   # camera
   input_frigate_camera: !input frigate_camera
   frigate_camera: '{{ input_frigate_camera | replace(''camera.'', '''') }}'
-  frigate_camera_name: '{{ frigate_camera | replace(''_'', '' '') | title }}'
-
-  # zones
-  input_frigate_zones: !input frigate_zones
-  frigate_zones: '{{ input_frigate_zones | list }}'
-
-  # labels
-  input_frigate_labels: !input frigate_labels
-  frigate_labels: '{{ input_frigate_labels | list }}'
 
 trigger:
   # - platform: mqtt
@@ -96,24 +88,19 @@ trigger:
     value_template: '{{ value_json[''after''][''camera''] }}/{{ value_json[''type'']}}'
     id: frigate-event
 
-# condition:
-#   # camera verification
-#   - "{{ trigger.payload_json['after']['camera'] == '{{ mqtt_frigate_camera_name }}' }}"
+variables:
+  # camera
+  input_frigate_camera: !input frigate_camera
+  frigate_camera: '{{ input_frigate_camera | replace(''camera.'', '''') }}'
+  frigate_camera_name: '{{ frigate_camera | replace(''_'', '' '') | title }}'
 
-#   # zone verification
-#   - condition: or
-#     conditions:
-#       # verify that the detection is in zone lawn
-#       - "{{ '{{ mqtt_frigate_zone_name }}' in trigger.payload_json['after']['entered_zones'] }}"
-#       #- "{{ 'driveway' in trigger.payload_json['after']['entered_zones'] }}"
+  # zones
+  input_frigate_zones: !input frigate_zones
+  frigate_zones: '{{ input_frigate_zones | list }}'
 
-#   # label verification
-#   - condition: or
-#     conditions:
-#       # verify that we have detected a person
-#       - "{{ trigger.payload_json['after']['label'] == 'person' }}"
-
-
+  # labels
+  input_frigate_labels: !input frigate_labels
+  frigate_labels: '{{ input_frigate_labels | list }}'
 action:
   - choose:
     - alias: Frigate Event
