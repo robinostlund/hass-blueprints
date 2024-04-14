@@ -34,6 +34,7 @@ blueprint:
     frigate_zones:
       name: "Frigate Zone Name"
       description: "Set your zone name from frigate here when you want this automation to trigger"
+      # A list (-) of zones you wish to recieve notifications for.
       default: []
       selector:
         object: {}
@@ -50,13 +51,13 @@ blueprint:
           sort: true
       default: "Persons"
 
-    alarm_control_panel_home_alarm:
-      name: "Home Alarm"
-      description: "If you have a alarm and only want to trigger this automation when it is in different states"
-      selector:
-        entity:
-          filter:
-            - domain: alarm_control_panel
+    # alarm_control_panel_home_alarm:
+    #   name: "Home Alarm"
+    #   description: "If you have a alarm and only want to trigger this automation when it is in different states"
+    #   selector:
+    #     entity:
+    #       filter:
+    #         - domain: alarm_control_panel
 
     notify_service: 
       name: "Notify Service"
