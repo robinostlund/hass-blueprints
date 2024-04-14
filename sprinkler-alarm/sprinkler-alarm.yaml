@@ -64,6 +64,11 @@ blueprint:
       description: "Specify notify service to trigger on an event"
       default: ""
 
+    #notify_telegram_chat_id:
+    #  name: "Telegram Chat ID"
+    #  description: "Telegram chat id"
+      
+
       # selector:
       #   device:
       #     integration: mobile_app
@@ -99,6 +104,9 @@ variables:
   #frigate_labels: '{{ input_frigate_labels | list }}'
   frigate_labels: '{{ input_frigate_labels }}'
 
+  # telegram
+  #telegram_chat_id: !input notify_telegram_chat_id
+
 
 action:
   - choose:
@@ -114,6 +122,22 @@ action:
             object: "{{ trigger.payload_json['after']['label'] }}"
             label: "{{ object | title }}"
             entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
+
+        # - alias: Send Telegram Notification
+        #   service: telegram_bot.send_photo
+        #   data:
+        #     target: "{{ telegram_chat_id }}"
+            
+        - alias: Send notification to Telegram
+          service: !input notify_group
+          data_template:
+            title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+            message: |
+              DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
+              {{ trigger.payload_json['after'] }}
+            data:
+              photo:
+                - url: "{{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg"
 
         - alias: Send notification
           service: !input notify_group
