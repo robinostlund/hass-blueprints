@@ -72,16 +72,11 @@ blueprint:
 
 mode: single
 trigger_variables:
-  # camera
+  # frigate camera
   input_frigate_camera: !input frigate_camera
   frigate_camera: '{{ input_frigate_camera | replace(''camera.'', '''') }}'
 
 trigger:
-  # - platform: mqtt
-  #   topic: !input mqtt_frigate_event_topic
-  #   payload: new
-  #   value_template: "{{ value_json.type }}"
-
   - platform: mqtt
     topic: frigate/events
     payload: '{{ frigate_camera }}/new'
@@ -89,18 +84,19 @@ trigger:
     id: frigate-event
 
 variables:
-  # camera
+  # frigate camera
   input_frigate_camera: !input frigate_camera
   frigate_camera: '{{ input_frigate_camera | replace(''camera.'', '''') }}'
   frigate_camera_name: '{{ frigate_camera | replace(''_'', '' '') | title }}'
 
-  # zones
+  # frigate zones
   input_frigate_zones: !input frigate_zones
   frigate_zones: '{{ input_frigate_zones | list }}'
 
-  # labels
+  # frigate labels
   input_frigate_labels: !input frigate_labels
   frigate_labels: '{{ input_frigate_labels | list }}'
+
 action:
   - choose:
     - alias: Frigate Event
@@ -120,7 +116,7 @@ action:
           condition: and
           conditions:
             - '{{ not zone_only or initial_entered_zones|length > 0 }}'
-            - '{{ not frigate_zones|length or frigate_zones|select(''in'', entered_zones)|list|length > 0 }}'
+            - '{{ not expand(frigate_zones)|length or expand(frigate_zones)|select(''in'', entered_zones)|list|length > 0 }}'
 
         - alias: Verify this object is enabled
           condition: template
