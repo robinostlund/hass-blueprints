@@ -115,7 +115,7 @@ variables:
   # content
   payload_id: "{{ trigger.payload_json['after']['id'] }}"
   payload_object: "{{ trigger.payload_json['after']['label'] }}"
-  payload_object_detected: "{{ objects|select('in', object)|list|length > 0 }}"
+  #payload_object_detected: "{{ frigate_labels|select('in', object)|list|length > 0 }}"
   payload_label: "{{ payload_object | title }}"
   payload_entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
   #payload_entered_zones_changed: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
@@ -124,7 +124,8 @@ condition:
   - condition: and
     conditions:
       # verify we have an object
-      - "{{ payload_object_detected }}"
+      #"{{ frigate_labels|select('in', object)|list|length > 0 }}"
+      #- "{{ payload_object_detected }}"
 
       # verify the object is an object we should monitor
       - "{{ not frigate_labels|length or payload_object in frigate_labels }}"
