@@ -113,7 +113,9 @@ variables:
 
 
   # content
+  payload_camera: "{{ trigger.payload_json['after']['camera'] }}"
   payload_id: "{{ trigger.payload_json['after']['id'] }}"
+  payload_start_time: "{{ trigger.payload_json["after"]["start_time"] }}"
   payload_object: "{{ trigger.payload_json['after']['label'] }}"
   #payload_object_detected: "{{ frigate_labels|select('in', object)|list|length > 0 }}"
   payload_label: "{{ payload_object | title }}"
@@ -126,6 +128,9 @@ condition:
       # verify we have an object
       #"{{ frigate_labels|select('in', object)|list|length > 0 }}"
       #- "{{ payload_object_detected }}"
+
+      # verify this is the correct camera
+      - "{{ payload_camera == frigate_camera }}"
 
       # verify the object is an object we should monitor
       - "{{ not frigate_labels|length or payload_object in frigate_labels }}"
@@ -146,7 +151,8 @@ action:
         group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
         image: >-
           {{ hass_base_url }}/api/frigate/notifications/{{ payload_id }}/thumbnail.jpg
-        tag: '{{ payload_id }}'
+        tag: "{{ payload_id }}"
+        when: "{{ payload_start_time }}"
         push:
           sound:
             name: "default"
