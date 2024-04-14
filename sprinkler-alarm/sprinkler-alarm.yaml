@@ -110,10 +110,10 @@ action:
         #- '{{ not this.attributes.last_triggered or (now() - this.attributes.last_triggered).seconds > cooldown }}'
       sequence:
         - variables:
-            id: '{{ trigger.payload_json[''after''][''id''] }}'
-            object: '{{ trigger.payload_json[''after''][''label''] }}'
-            label: '{{ object | title }}'
-            entered_zones: '{{ trigger.payload_json[''after''][''entered_zones''] }}'
+            id: "{{ trigger.payload_json['after']['id'] }}"
+            object: "{{ trigger.payload_json['after']['label'] }}"
+            label: "{{ object | title }}"
+            entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
 
         - alias: Send notification
           service: !input notify_group
@@ -121,6 +121,7 @@ action:
             title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
             message: |
               DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
+              {{ trigger.payload_json['after'] }}
             data:
               group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
               image: >-
@@ -152,6 +153,7 @@ action:
               image: >-
                 {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
               tag: '{{ id }}'
+              when: '{{ trigger.payload_json["after"]["start_time"]|int }}'
               push:
                 sound:
                   name: "default"
