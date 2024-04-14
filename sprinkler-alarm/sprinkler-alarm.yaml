@@ -104,7 +104,7 @@ action:
         - condition: trigger
           id: frigate-event
         - '{{ is_state(this.entity_id, ''on'') }}'
-        - '{{ not this.attributes.last_triggered or (now() - this.attributes.last_triggered).seconds > cooldown }}'
+        #- '{{ not this.attributes.last_triggered or (now() - this.attributes.last_triggered).seconds > cooldown }}'
       sequence:
         - variables:
             id: '{{ trigger.payload_json[''after''][''id''] }}'
