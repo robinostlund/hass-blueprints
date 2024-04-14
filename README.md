@@ -1,2 +1,2 @@
-# hass_blueprints
+# hass-blueprints
 Repository containing different Homeassistant Blueprints

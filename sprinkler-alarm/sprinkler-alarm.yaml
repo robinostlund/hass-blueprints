@@ -1,0 +1,148 @@
+blueprint:
+  name: Sprinkler Alarm
+  description: Start sprinklers on frigate events.
+  domain: automation
+
+  input:
+    hass_base_url:
+      name: Base URL
+      description: "External URL for your Home Assistant instance" 
+
+    binary_sensor_sprinkler_safety:
+      name: "Sprinkler Safety Sensor"
+      description: "This is a binary sensor you need to create which should be off when it is safe to run sprinklers."
+      selector:
+        entity:
+          filter:
+            - domain: binary_sensor
+            - device_class: motion #TODO
+
+    mqtt_frigate_event_topic:
+      name: "Frigate Event Topic"
+      description: "Your frigate mqtt event topic"
+      default: frigate/events
+
+    frigate_camera:
+      name: "Frigate Camera Name"
+      description: "Set your camera name from frigate here"
+      selector:
+        entity:
+          integration: frigate
+          domain: camera
+          multiple: false
+
+    frigate_zones:
+      name: "Frigate Zone Name"
+      description: "Set your zone name from frigate here when you want this automation to trigger"
+      default: []
+      selector:
+        object: {}
+
+    frigate_labels:
+      name: "Frigate Labels"
+      description: "Select the labels you want to trigger this automation"
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: "Persons"
+              value: "person"
+          sort: true
+      default: "Persons"
+
+    alarm_control_panel_home_alarm:
+      name: "Home Alarm"
+      description: "If you have a alarm and only want to trigger this automation when it is in different states"
+      selector:
+        entity:
+          filter:
+            - domain: alarm_control_panel
+
+    notify_service: 
+      name: "Notify Service"
+      description: "Specify notify service to trigger on an event"
+      selector:
+        device:
+          integration: mobile_app
+          multiple: false
+
+
+mode: single
+variables:
+  # camera
+  input_frigate_camera: !input frigate_camera
+  frigate_camera: '{{ input_frigate_camera | replace(''camera.'', '''') }}'
+  frigate_camera_name: '{{ frigate_camera | replace(''_'', '' '') | title }}'
+
+  # zones
+  input_frigate_zones: !input frigate_zones
+  frigate_zones: '{{ input_frigate_zones | list }}'
+
+  # labels
+  input_frigate_labels: !input frigate_labels
+  frigate_labels: '{{ input_frigate_labels | list }}'
+
+trigger:
+  # - platform: mqtt
+  #   topic: !input mqtt_frigate_event_topic
+  #   payload: new
+  #   value_template: "{{ value_json.type }}"
+
+  - platform: mqtt
+    topic: frigate/events
+    payload: '{{ frigate_camera }}/new'
+    value_template: '{{ value_json[''after''][''camera''] }}/{{ value_json[''type'']}}'
+    id: frigate-event
+
+condition:
+  # camera verification
+  - "{{ trigger.payload_json['after']['camera'] == '{{ mqtt_frigate_camera_name }}' }}"
+
+  # zone verification
+  - condition: or
+    conditions:
+      # verify that the detection is in zone lawn
+      - "{{ '{{ mqtt_frigate_zone_name }}' in trigger.payload_json['after']['entered_zones'] }}"
+      #- "{{ 'driveway' in trigger.payload_json['after']['entered_zones'] }}"
+
+  # label verification
+  - condition: or
+    conditions:
+      # verify that we have detected a person
+      - "{{ trigger.payload_json['after']['label'] == 'person' }}"
+
+
+action:
+  - choose:
+    - alias: Frigate Event
+      conditions:
+        - condition: trigger
+          id: frigate-event
+        - '{{ is_state(this.entity_id, ''on'') }}'
+        - '{{ not this.attributes.last_triggered or (now() - this.attributes.last_triggered).seconds > cooldown }}'
+      sequence:
+        - variables:
+            id: '{{ trigger.payload_json[''after''][''id''] }}'
+            object: '{{ trigger.payload_json[''after''][''label''] }}'
+            label: '{{ object | title }}'
+
+        - alias: Verify this object is enabled
+          condition: template
+          value_template: '{{ not labels|length or object in labels }}'
+
+        - alias: Send notification
+          service: !input notify_service
+          data_template:
+            title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+            message: |
+              Starting sprinklers
+            data:
+              group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
+              image: >-
+                {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
+              tag: '{{ id }}'
+              push:
+                sound:
+                  name: "default"
+                  critical: 1
+                  volume: 0.0
