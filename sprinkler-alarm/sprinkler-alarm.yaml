@@ -158,7 +158,7 @@ action:
         image: >-
           {{ hass_base_url }}/api/frigate/notifications/{{ payload_id }}/thumbnail.jpg
         tag: "{{ payload_id }}"
-        when: "{{ payload_start_time }}"
+        when: "{{ payload_start_time | int }}"
         push:
           sound:
             name: "default"
