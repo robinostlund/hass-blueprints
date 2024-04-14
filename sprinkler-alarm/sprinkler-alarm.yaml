@@ -94,22 +94,22 @@ trigger:
     value_template: '{{ value_json[''after''][''camera''] }}/{{ value_json[''type'']}}'
     id: frigate-event
 
-condition:
-  # camera verification
-  - "{{ trigger.payload_json['after']['camera'] == '{{ mqtt_frigate_camera_name }}' }}"
+# condition:
+#   # camera verification
+#   - "{{ trigger.payload_json['after']['camera'] == '{{ mqtt_frigate_camera_name }}' }}"
 
-  # zone verification
-  - condition: or
-    conditions:
-      # verify that the detection is in zone lawn
-      - "{{ '{{ mqtt_frigate_zone_name }}' in trigger.payload_json['after']['entered_zones'] }}"
-      #- "{{ 'driveway' in trigger.payload_json['after']['entered_zones'] }}"
+#   # zone verification
+#   - condition: or
+#     conditions:
+#       # verify that the detection is in zone lawn
+#       - "{{ '{{ mqtt_frigate_zone_name }}' in trigger.payload_json['after']['entered_zones'] }}"
+#       #- "{{ 'driveway' in trigger.payload_json['after']['entered_zones'] }}"
 
-  # label verification
-  - condition: or
-    conditions:
-      # verify that we have detected a person
-      - "{{ trigger.payload_json['after']['label'] == 'person' }}"
+#   # label verification
+#   - condition: or
+#     conditions:
+#       # verify that we have detected a person
+#       - "{{ trigger.payload_json['after']['label'] == 'person' }}"
 
 
 action:
