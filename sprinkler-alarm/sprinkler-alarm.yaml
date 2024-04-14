@@ -131,7 +131,7 @@ condition:
       #- "{{ payload_object_detected }}"
 
       # verify this is the correct camera
-      - "{{ payload_camera == frigate_camera }}"
+      #- "{{ payload_camera == frigate_camera }}"
 
       # verify the object is an object we should monitor
       - "{{ not frigate_labels|length or payload_object in frigate_labels }}"
