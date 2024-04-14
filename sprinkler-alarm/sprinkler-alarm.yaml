@@ -1,3 +1,4 @@
+# https://github.com/blakeblackshear/frigate/issues/9271
 blueprint:
   name: Sprinkler Alarm
   description: Start sprinklers on frigate events.
@@ -84,7 +85,7 @@ trigger_variables:
 trigger:
   - platform: mqtt
     topic: frigate/events
-    payload: '{{ frigate_camera }}/new'
+    #payload: '{{ frigate_camera }}/new'
     value_template: '{{ value_json[''after''][''camera''] }}/{{ value_json[''type'']}}'
     id: frigate-event
 
@@ -111,81 +112,121 @@ variables:
   #telegram_chat_id: !input notify_telegram_chat_id
 
 
+  # content
+  payload_id: "{{ trigger.payload_json['after']['id'] }}"
+  payload_object: "{{ trigger.payload_json['after']['label'] }}"
+  payload_object_detected: "{{ objects|select('in', object)|list|length > 0 }}"
+  payload_label: "{{ payload_object | title }}"
+  payload_entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
+  payload_entered_zones_changed: "{{ frigate_zones|length > 0 and (frigate_zones|select('in', entered_zones)|list|length > 0 and not frigate_zones|select('in', last_zones)|list|length) }}"
+
+condition:
+  and:
+    # verify we have an object
+    - condition: template
+      value_template: "{{ payload_object_detected }}"
+
+    # verify the object is an object we should monitor
+    - conditon: template
+      value_template: "{{ not frigate_labels|length or object in payload_object }}"
+
+    # verify the zone is a zone we should monitor
+    - condition: template
+      value_template: "{{ payload_entered_zones_changed }}"
 
 action:
-  - choose:
-    - alias: Frigate Event
-      conditions:
-        - condition: trigger
-          id: frigate-event
-        - '{{ is_state(this.entity_id, ''on'') }}'
-        #- '{{ not this.attributes.last_triggered or (now() - this.attributes.last_triggered).seconds > cooldown }}'
-      sequence:
-        - variables:
-            id: "{{ trigger.payload_json['after']['id'] }}"
-            object: "{{ trigger.payload_json['after']['label'] }}"
-            label: "{{ object | title }}"
-            entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
 
-        # - alias: Send Telegram Notification
-        #   service: telegram_bot.send_photo
-        #   data:
-        #     target: "{{ telegram_chat_id }}"
+  - alias: Send notification
+    service: !input notify_group
+    data_template:
+      title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+      message: |
+        DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
+        {{ trigger.payload_json['after'] }}
+      data:
+        group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
+        image: >-
+          {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
+        tag: '{{ id }}'
+        push:
+          sound:
+            name: "default"
+            critical: 1
+            volume: 0.0
+
+  # - choose:
+  #   - alias: Frigate Event
+  #     conditions:
+  #       - condition: trigger
+  #         id: frigate-event
+  #       - '{{ is_state(this.entity_id, ''on'') }}'
+  #       #- '{{ not this.attributes.last_triggered or (now() - this.attributes.last_triggered).seconds > cooldown }}'
+  #     sequence:
+  #       - variables:
+  #           id: "{{ trigger.payload_json['after']['id'] }}"
+  #           object: "{{ trigger.payload_json['after']['label'] }}"
+  #           label: "{{ object | title }}"
+  #           entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
+
+  #       # - alias: Send Telegram Notification
+  #       #   service: telegram_bot.send_photo
+  #       #   data:
+  #       #     target: "{{ telegram_chat_id }}"
             
-        # - alias: Send notification to Telegram
-        #   service: !input notify_group
-        #   data_template:
-        #     title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
-        #     message: |
-        #       DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
-        #       {{ trigger.payload_json['after'] }}
-        #     data:
-        #       photo:
-        #         - url: "{{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg"
-        #           caption: >-
-        #             {{ label }} detected on {{ frigate_camera_name }} camera.
+  #       # - alias: Send notification to Telegram
+  #       #   service: !input notify_group
+  #       #   data_template:
+  #       #     title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+  #       #     message: |
+  #       #       DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
+  #       #       {{ trigger.payload_json['after'] }}
+  #       #     data:
+  #       #       photo:
+  #       #         - url: "{{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg"
+  #       #           caption: >-
+  #       #             {{ label }} detected on {{ frigate_camera_name }} camera.
 
-        - alias: Send notification
-          service: !input notify_group
-          data_template:
-            title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
-            message: |
-              DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
-              {{ trigger.payload_json['after'] }}
-            data:
-              group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
-              image: >-
-                {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
-              tag: '{{ id }}'
-              push:
-                sound:
-                  name: "default"
-                  critical: 1
-                  volume: 0.0
+  #       - alias: Send notification
+  #         service: !input notify_group
+  #         data_template:
+  #           title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+  #           message: |
+  #             DEBUG: id {{ id }}, object {{ object }}, label {{ label }}, entered_zones {{ entered_zones }}, frigate_labels {{ frigate_labels }}, frigate_zones {{ frigate_zones }}
+  #             {{ trigger.payload_json['after'] }}
+  #           data:
+  #             group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
+  #             image: >-
+  #               {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
+  #             tag: '{{ id }}'
+  #             push:
+  #               sound:
+  #                 name: "default"
+  #                 critical: 1
+  #                 volume: 0.0
 
-        - alias: Verify this zone is enabled
-          condition: and
-          conditions:
-            - '{{ not frigate_zones|length or frigate_zones|select(''in'', entered_zones)|list|length > 0 }}'
+  #       - alias: Verify this zone is enabled
+  #         condition: and
+  #         conditions:
+  #           - '{{ not frigate_zones|length or frigate_zones|select(''in'', entered_zones)|list|length > 0 }}'
 
-        - alias: Verify this object is enabled
-          condition: template
-          value_template: '{{ not frigate_labels|length or object in frigate_labels }}'
+  #       - alias: Verify this object is enabled
+  #         condition: template
+  #         value_template: '{{ not frigate_labels|length or object in frigate_labels }}'
 
-        - alias: Send notification
-          service: !input notify_group
-          data_template:
-            title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
-            message: |
-              Starting sprinklers
-            data:
-              group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
-              image: >-
-                {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
-              tag: '{{ id }}'
-              when: '{{ trigger.payload_json["after"]["start_time"]|int }}'
-              push:
-                sound:
-                  name: "default"
-                  critical: 1
-                  volume: 0.0
+  #       - alias: Send notification
+  #         service: !input notify_group
+  #         data_template:
+  #           title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
+  #           message: |
+  #             Starting sprinklers
+  #           data:
+  #             group: "{{ frigate_camera }}-sprinkler-intrusion-alert"
+  #             image: >-
+  #               {{ hass_base_url }}/api/frigate/notifications/{{ id }}/thumbnail.jpg
+  #             tag: '{{ id }}'
+  #             when: '{{ trigger.payload_json["after"]["start_time"]|int }}'
+  #             push:
+  #               sound:
+  #                 name: "default"
+  #                 critical: 1
+  #                 volume: 0.0
