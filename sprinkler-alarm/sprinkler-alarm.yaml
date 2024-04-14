@@ -140,7 +140,7 @@ action:
           value_template: '{{ not frigate_labels|length or object in frigate_labels }}'
 
         - alias: Send notification
-          service: !input notify_service
+          service: !input notify_group
           data_template:
             title: 💦 {{ label }} detected on {{ frigate_camera_name }} camera.
             message: |
